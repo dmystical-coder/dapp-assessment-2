@@ -48,6 +48,7 @@ h1 {
 
 form {
   width: 100%;
+  text-align: center;
 }
 
 .input-group {
@@ -60,13 +61,14 @@ form {
   border: 1px solid #a1a1aa;
   background: #fafafa;
   gap: 1rem;
+  margin-bottom: .5rem;
 }
 
 .input-group > .input {
   width: 100%;
 }
 
-.input > input {
+.input{
   padding: 0.75rem 1rem;
   border-radius: 0.5rem;
   border: 1px solid #d0d5dd;
@@ -82,11 +84,11 @@ form {
   box-shadow: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);
 }
 
-.input > input::placeholder {
+.input::placeholder {
   color: #141413;
 }
 
-.input > input:focus {
+.input:focus {
   outline-color: #141413;
   transition: outline-color 0.3s ease;
 }

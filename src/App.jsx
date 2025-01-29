@@ -153,8 +153,8 @@ const App = () => {
           value={taskText}
           onChange={(e) => setTaskText(e.target.value)}
         />
-      <button onClick={addTask}>Add Task</button>
     </div>
+      <button className='btn btn1' onClick={addTask}>Add Task</button>
   </form>
 
     <div className="todos-list">
@@ -172,7 +172,9 @@ const App = () => {
           </li>
         ))}
       </ul>
+      </div>
 
+      <div>
       <h3>Latest Task Event</h3>
       {latestTask ? (
         <p>Task {latestTask.taskId} added by {latestTask.recepient}</p>
@@ -180,7 +182,8 @@ const App = () => {
         <p>No tasks added yet.</p>
       )}
     </div>
-  
+    <div>
+      </div>
   </div>
   
     </>
