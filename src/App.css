@@ -9,6 +9,9 @@
 }
 
 body {
+  width: 100%;
+  display: grid;
+  place-content: center;
   background: #F0EFEB;
   background-repeat: no-repeat;
   background-size: cover;
@@ -22,9 +25,9 @@ body {
 }
 
 .card {
+  width: 750px;
   position: relative;
   margin-top: 2rem;
-  width: 100%;
   display: flex;
   flex-direction: column;
   justify-content: center;
