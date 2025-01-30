@@ -1,10 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap");
 
 * > * {
   padding: 0;
   margin: 0;
   box-sizing: border-box;
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
   list-style: none;
 }
 
@@ -12,7 +12,7 @@ body {
   width: 100%;
   display: grid;
   place-content: center;
-  background: #F0EFEB;
+  background: #f0efeb;
   background-repeat: no-repeat;
   background-size: cover;
 }
@@ -33,7 +33,7 @@ body {
   justify-content: center;
   align-items: center;
   gap: 2rem;
-  background-color: #FAFAF8;
+  background-color: #fafaf8;
   max-width: 850px;
   padding: 2rem 1rem;
   border: 1px solid #eee;
@@ -44,6 +44,11 @@ body {
 h1 {
   font-size: 2rem;
   color: #18181b;
+}
+h2 {
+  font-size: 1.5rem;
+  color: #18181b;
+  text-align: center;
 }
 
 form {
@@ -61,14 +66,14 @@ form {
   border: 1px solid #a1a1aa;
   background: #fafafa;
   gap: 1rem;
-  margin-bottom: .5rem;
+  margin-bottom: 0.5rem;
 }
 
 .input-group > .input {
   width: 100%;
 }
 
-.input{
+.input {
   padding: 0.75rem 1rem;
   border-radius: 0.5rem;
   border: 1px solid #d0d5dd;
@@ -100,10 +105,10 @@ form {
   border-radius: 0.5rem;
   border: 1px solid #141413;
   background: #141413;
-  color: #FAFAF8;
+  color: #fafaf8;
 
   /* Text md/Medium */
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
   font-size: 1rem;
   font-weight: 600;
   line-height: 1.5rem; /* 150% */
@@ -112,13 +117,13 @@ form {
   box-shadow: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);
   padding: 0.75rem 1.25rem;
 }
-.btn1{
+.btn1 {
   width: 50%;
   margin: 0 auto;
 }
 
 .btn:hover {
-  background-color: #FAFAF8;
+  background-color: #fafaf8;
   color: #141413;
   transition: background-color 0.3s ease;
 }
@@ -131,7 +136,55 @@ form {
   gap: 0.5rem;
 }
 
+.todos-list {
+  width: 90%;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.outer-div {
+  margin-top: 2rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem 4rem;
+  justify-content: center;
+}
+
+.outer-div > li {
+  padding: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  box-shadow: rgba(50, 50, 93, 0.25) 0px 6px 12px -2px,
+    rgba(0, 0, 0, 0.3) 0px 3px 7px -3px;
+}
+
+.left,
+.right {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.red {
+  padding: 0.5rem;
+  border: 1px solid #f31623;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  cursor: pointer;
+  margin-right: 0.5rem;
+  background-color: transparent;
+  outline: none;
+  font-size: 0.875rem;
+  color: #f31623;
+}
+
 @media screen and (min-width: 620px) {
+  .red {
+    font-size: 1rem;
+  }
   .input-group {
     flex-direction: row;
   }

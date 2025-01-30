@@ -1,193 +1,183 @@
-import { useState, useEffect } from 'react'
-import toast, { Toaster } from 'react-hot-toast';
-import { ethers } from 'ethers'
-import './App.css'
-import abi from './abi.json'
+import { useState, useEffect } from "react";
+import toast, { Toaster } from "react-hot-toast";
+import { ethers } from "ethers";
+import "./App.css";
+import abi from "./abi.json";
 
 const App = () => {
-  const contractAddress = '0x563093915cc3F436632c849bad3E8517a926bC09'
+  const contractAddress = "0x563093915cc3F436632c849bad3E8517a926bC09";
   const [tasks, setTasks] = useState([]);
   const [taskTitle, setTaskTitle] = useState("");
   const [taskText, setTaskText] = useState("");
   const [account, setAccount] = useState("");
+  const [contract, setContract] = useState(null);
 
-  const requestAccounts = async () => {
-    await window.ethereum.request({ method: 'eth_requestAccounts' })
-  }
+  useEffect(() => {
+      checkWalletConnection()
+    }, []);
+    
 
-  const connectAccount = async () => {
 
-    if (typeof window.ethereum !== 'undefined') {
-      await requestAccounts()
-      try {
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        const accounts = await provider.send("eth_requestAccounts", []);
-        setAccount(accounts[0]); // Set the first account connected
-        toast.success("Wallet Connected Successfully!");
-      } catch (error) {
-        toast.error("Error connecting Wallet")
-        console.error("Error connecting wallet:", error);
-      }
+  const checkWalletConnection = async () => { 
+    const accounts = await window.ethereum.request({ method: "eth_accounts" });
+    if (accounts.length > 0) {
+      setAccount(accounts[0]);
+      await initializeContract();
     } else {
-      alert("MetaMask is not installed. Please install MetaMask to connect.");
+      toast.error("Connect Wallet to continue");
     }
   }
 
-  const fetchTasks = async () => {
-    if (typeof window.ethereum !== 'undefined') {
-      await requestAccounts()
+  const initializeContract = async () => {
+    try {
+      if (!window.ethereum) {
+        toast.error("Oops! Metamask not found. Install MetaMask to connect");
+        throw new Error("Oops! Metamask not found");
+      }
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const taskContract = new ethers.Contract(contractAddress, abi, signer);
+      setContract(taskContract);
 
-      const provider = new ethers.BrowserProvider(window.ethereum)
-      const myContract = new ethers.Contract(contractAddress, abi, provider)
-      try {
-        const tasksArray = await myContract.getMyTask();
-        const formattedTasks = tasksArray.map((task) => ({
-          id: task.id.toString(), // Convert BigNumber to string
-          taskTitle: task.taskTitle,
-          taskText: task.taskText,
-          isDeleted: task.isDeleted,
-        }));
-        console.log("Fetched tasks:", formattedTasks);
-        setTasks(formattedTasks);
-      } catch (error) {
-        console.error("Error fetching tasks:", error);
+      await fetchTasks();
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
+  const connectWallet = async () => {
+    try {
+      if (!window.ethereum) {
+        toast.error("Oops! Metamask not found. Install MetaMask to connect");
+        throw new Error("Oops! Metamask not found");
       }
 
-      toast.success("Task updated!")
+      const accounts = await window.ethereum.request({
+        method: "eth_requestAccounts",
+      });
+      setAccount(accounts[0]); // Set the first account connected
+      toast.success("Wallet Connected Successfully!");
+
+      await initializeContract();
+    } catch (error) {
+      toast.error("Error connecting Wallet");
+      console.error("Error connecting wallet:", error);
+    }
+  };
+
+  const fetchTasks = async (myContract = contract) => {
+    if (!myContract) return;
+
+    try {
+      const fetchedTasks = await myContract.getMyTask();
+      const formattedTasks = fetchedTasks.map((task) => ({
+        id: Number(task.id), // Convert BigNumber to string
+        taskTitle: task.taskTitle,
+        taskText: task.taskText,
+        isDeleted: task.isDeleted,
+      }));
+      console.log("Fetched tasks:", formattedTasks);
+      setTasks(formattedTasks);
+      toast.success("Task updated!");
+    } catch (error) {
+      toast.error("Error fetching tasks! Check console for more details.");
+      console.error("Error fetching tasks:", error);
     }
   };
 
   // Add Task
-  const addTask = async () => {
-    if (!taskTitle || !taskText) return toast.error("Please fill in all fields.");
+  const addTask = async (e) => {
+    e.preventDefault();
 
-    if (typeof window.ethereum !== 'undefined') {
-      await requestAccounts()
+    if (!contract)
+      return toast.error(
+        "Contract not initialized. Please connect wallet and try again."
+      );
+    if (!taskTitle || !taskText)
+      return toast.error("Please fill in all fields.");
 
-      const provider = new ethers.BrowserProvider(window.ethereum)
-      const signer = await provider.getSigner()
-      const myContract = new ethers.Contract(contractAddress, abi, signer)
-      try {
-        const tx = await myContract.addTask(taskText, taskTitle, false);
-        await tx.wait(); // Wait for the transaction to be confirmed
-        toast.success("Task added successfully!");
-        setTaskTitle("");
-        setTaskText("");
-        fetchTasks(); // Refresh the task list after adding
-      } catch (error) {
-        toast.error("Error adding task:", error);
-      }
-    
-    }
+    try {
+      const tx = await contract.addTask(taskText, taskTitle, false);
+      await tx.wait(); // Wait for the transaction to be confirmed
+      toast.success("Task added successfully!");
 
-
-  };
-
-   // Delete Task
-   const deleteTask = async (taskId) => {
-    if (typeof window.ethereum !== 'undefined') {
-      await requestAccounts()
-
-      const provider = new ethers.BrowserProvider(window.ethereum)
-      const signer = await provider.getSigner()
-      const myContract = new ethers.Contract(contractAddress, abi, signer)
-      try {
-        const tx = await myContract.deleteTask(taskId);
-        await tx.wait();
-        toast.success("Task deleted successfully!");
-        fetchTasks();
-      } catch (error) {
-        console.error("Error:", error);
-        toast.error("Error deleting task!");
-      }
+      // Clear the input fields
+      setTaskTitle("");
+      setTaskText("");
+      await fetchTasks(); // Refresh the task list after adding
+    } catch (error) {
+      toast.error("Error adding task:", error);
     }
   };
 
-
-  useEffect(() => {
-    if (account) {
-      fetchTasks();
+  // Delete Task
+  const deleteTask = async (id) => {
+    if (!contract) return toast.error("Contract not initialized. Please connect wallet and try again.");
+    try {
+      const tx = await contract.deleteTask(id);
+      await tx.wait();
+      toast.success("Task deleted successfully!");
+      await fetchTasks();
+    } catch (error) {
+      toast.error("Error deleting task! Check console for more details.");
+      console.error("Error:", error);
     }
-  }, [account]);
-
-  const [latestTask, setLatestTask] = useState(null);
-
-  useEffect(() => {
-    if (typeof window.ethereum !== "undefined") {
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const contract = new ethers.Contract(contractAddress, abi, provider);
-
-      contract.on("AddTask", (recepient, taskId) => {
-        console.log(`New Task Added: ${taskId} by ${recepient}`);
-        setLatestTask({ recepient, taskId });
-      });
-
-      return () => {
-        contract.removeAllListeners("AddTask");
-      };
-    }
-  }, []);
+  };
 
   return (
     <>
-    <Toaster position='top-center' />
-<div className="card">
-    <button className='btn btn1' onClick={connectAccount}>
-        {account ? `Connected: ${account.slice(0, 6)}...` : "Connect Wallet"}
-      </button>
-    <h1>Task Manager DApp</h1>
+      <Toaster position="top-center" />
+      <div className="card">
+        <button className="btn btn1" onClick={connectWallet}>
+          {account ? `Connected: ${account.slice(0, 6)}...` : "Connect Wallet"}
+        </button>
+        <h1>Task Manager DApp</h1>
 
-    <form onSubmit={(e) => e.preventDefault()}>
-    <div className="input-group">
-      <input
-      className='input'
-          type="text"
-          placeholder="Task Title"
-          value={taskTitle}
-          onChange={(e) => setTaskTitle(e.target.value)}
-        />
-        <input
-        className='input'
-          type="text"
-          placeholder="Task Text"
-          value={taskText}
-          onChange={(e) => setTaskText(e.target.value)}
-        />
-    </div>
-      <button className='btn btn1' onClick={addTask}>Add Task</button>
-  </form>
+        <form onSubmit={(e) => e.preventDefault()}>
+          <div className="input-group">
+            <input
+              className="input"
+              type="text"
+              placeholder="Task Title"
+              value={taskTitle}
+              onChange={(e) => setTaskTitle(e.target.value)}
+            />
+            <input
+              className="input"
+              type="text"
+              placeholder="Task Text"
+              value={taskText}
+              onChange={(e) => setTaskText(e.target.value)}
+            />
+          </div>
+          <button className="btn btn1" type="submit" onClick={addTask}>
+            Add Task
+          </button>
+        </form>
 
-    <div className="todos-list">
-      <h2>
-        <span> Tasks</span>
-      </h2>
+        <div className="todos-list">
+          {!tasks.length ? "" : <h2>
+            Tasks
+          </h2>}
 
-      <ul>
-        {tasks.map((task, index) => (
-          <li key={index}>
-            <h3>{task.taskTitle}</h3>
-            <p>{task.taskText}</p>
-            <p>Status: {task.isDeleted ? "Deleted" : "Active"}</p>
-            <button onClick={deleteTask}>Delete Task</button>
-          </li>
-        ))}
-      </ul>
+          <ul className="outer-div">
+            {tasks.map((task) => (
+              <li key={task.id}>
+                <div className="left">
+                <h3>{task.taskTitle}</h3>
+                <p>{task.taskText}</p>
+                </div>
+                <div className="right">
+                <p>Status: {task.isDeleted ? "Deleted" : "Active"}</p>
+                <button className="red" onClick={() => deleteTask(task.id)}>Delete Task</button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
-
-      <div>
-      <h3>Latest Task Event</h3>
-      {latestTask ? (
-        <p>Task {latestTask.taskId} added by {latestTask.recepient}</p>
-      ) : (
-        <p>No tasks added yet.</p>
-      )}
-    </div>
-    <div>
-      </div>
-  </div>
-  
     </>
-  )
-}
+  );
+};
 
-export default App
+export default App;
